@@ -2,8 +2,8 @@
 
 start_time=$(date +%s)
 verbose=false
-pathFolder=$2
-pathDataBase=$1
+#pathFolder=$2
+#pathDataBase=$1
 
 ######################################################################################################CHECK TYPE
 checkType(){
@@ -62,40 +62,41 @@ fi
 echo "Time duration:" $hour"h:"$min"m:"$sec"s"
 }
 ####################################################################################################PARSING FILE
-
-length=$(awk 'END{print NR}' $pathDataBase)
-echo $lenght
-DIR=$(readlink -f $pathFolder)
-echo $DIR
-files=$(find $DIR -type f)
-#files=(`ls $DIR`)
-for f in $files
-#do
-#echo $files
-#done
-   do
-      toto=0
-      dumpHexa $f
+parsingFiles(){
+      pass=0
+      dumpHexa $f &
+      wait
       for ((i=1;i<=length;i++))
          do
-                toto=$(expr $toto + 1)
-                signature=$(awk -F":" -v ligne=$i 'NR==ligne{print $1}' $pathDataBase)
-                #echo $signature
-                name=$(awk -F":" -v ligne=$i 'NR==ligne{print $3}' $pathDataBase)
+                pass=$(expr $pass + 1)
+                signature=$(awk -F":" -v ligne=$i 'NR==ligne{print $4}' $pathDataBase)
+                name=$(awk -F":" -v ligne=$i 'NR==ligne{print $1}' $pathDataBase)
                 if $verbose 
                 then
                   echo $(readlink -f $f)
-                  echo $toto "--> Pattern : " $name
+                  echo $pass "--> Pattern : " $name
                   if (echo $fichier| grep -r $signature)
 		            then echo -e '\e[1;31m'$f "IS INFECTED by --> " $name'\e[0m'
 		            fi
 		          else
-		            if (echo $fichier| grep -qr $signature) 
+		            if (echo $fichier| grep -qr $signature)
 		            then echo -e '\e[1;31m'$f "IS INFECTED by --> " $name'\e[0m'
 		            fi
 		          fi	
          done
-   done         
-calculateTime 
+}
+
+####################################################################################################SCRIPT EXECUTION
+length=$(awk 'END{print NR}' $pathDataBase)
+#echo $lenght
+DIR=$(readlink -f $pathFolder)
+#echo $DIR
+files=$(find $DIR -type f)
+for f in $files
+   do
+parsingFiles &
+done
+wait
+calculateTime
 
 exit 0
