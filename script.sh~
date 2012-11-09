@@ -64,8 +64,7 @@ echo "Time duration:" $hour"h:"$min"m:"$sec"s"
 ####################################################################################################PARSING FILE
 parsingFiles(){
       pass=0
-      dumpHexa $f &
-      wait
+      dumpHexa $f
       for ((i=1;i<=length;i++))
          do
                 pass=$(expr $pass + 1)
@@ -75,12 +74,14 @@ parsingFiles(){
                 then
                   echo $(readlink -f $f)
                   echo $pass "--> Pattern : " $name
-                  if (echo $fichier| grep -r $signature)
+                  if (echo $fichier| grep -qr $signature)
 		            then echo -e '\e[1;31m'$f "IS INFECTED by --> " $name'\e[0m'
+		            echo "   $f" "IS INFECTED by --> " $name >> /home/$user/Bureau/LogReport
 		            fi
 		          else
 		            if (echo $fichier| grep -qr $signature)
 		            then echo -e '\e[1;31m'$f "IS INFECTED by --> " $name'\e[0m'
+		            echo "   $f" "IS INFECTED by --> " $name >> /home/$user/Bureau/LogReport
 		            fi
 		          fi	
          done
@@ -88,16 +89,16 @@ parsingFiles(){
 
 ####################################################################################################SCRIPT EXECUTION
 length=$(awk 'END{print NR}' $pathDataBase)
-#echo $lenght
 DIR=$(readlink -f $pathFolder)
-#echo $DIR
 files=$(find $DIR -type f)
+user=$(echo "$USER")
+touch LogReport /home/$user/Bureau
+echo "" >> /home/$user/Bureau/LogReport
+echo "****** "$(date +"%c")" ******" >> /home/$user/Bureau/LogReport
 for f in $files
    do
 parsingFiles &
 done
 wait
-calculateTime&
-wait 
-
+calculateTime
 exit 0
